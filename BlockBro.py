@@ -30,9 +30,9 @@ ball_speed_y = -5
 # ブロックの設定
 block_width = 70  # ブロックの幅
 block_height = 25  # ブロックの高さ
-block_rows = 6  # 行の数（4行）
-block_cols = 6  # 列の数（7列）
-block_gap = 5  # ブロック間の隙間
+block_rows = 5  # 行の数（5行）
+block_cols = 6  # 列の数（6列）
+block_gap = 7  # ブロック間の隙間
 block_y_offset = 100  # スコアの上に隙間を作る
 
 # 中央揃えのブロック座標計算
@@ -48,11 +48,11 @@ def show_result_screen(score):
     """リザルト画面を表示する関数"""
     screen.fill(BLACK)  # 背景を黒で塗りつぶし
     rank = ""
-    if score >= 20:
+    if score >= 280:
         rank = "A"
-    elif score >= 10:
+    elif score >= 120:
         rank = "B"
-    elif score >= 5:
+    elif score >= 100:
         rank = "C"
     else:
         rank = "D"

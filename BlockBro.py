@@ -29,11 +29,11 @@ ball_speed_y = -5
 
 # ブロックの設定
 block_width = 70  # ブロックの幅
-block_height = 20  # ブロックの高さ
+block_height = 25  # ブロックの高さ
 block_rows = 6  # 行の数（4行）
 block_cols = 6  # 列の数（7列）
 block_gap = 5  # ブロック間の隙間
-block_y_offset = 120  # スコアの上に隙間を作る
+block_y_offset = 100  # スコアの上に隙間を作る
 
 # 中央揃えのブロック座標計算
 blocks = [(x * (block_width + block_gap) + (WIDTH - (block_cols * (block_width + block_gap))) // 2,
@@ -43,6 +43,36 @@ blocks = [(x * (block_width + block_gap) + (WIDTH - (block_cols * (block_width +
 # スコアの設定
 score = 0
 font = pygame.font.SysFont("Arial", 30)
+
+def show_result_screen(score):
+    """リザルト画面を表示する関数"""
+    screen.fill(BLACK)  # 背景を黒で塗りつぶし
+    rank = ""
+    if score >= 20:
+        rank = "A"
+    elif score >= 10:
+        rank = "B"
+    elif score >= 5:
+        rank = "C"
+    else:
+        rank = "D"
+
+    # 得点とランクを表示
+    score_text = font.render(f"Score: {score}", True, WHITE)
+    rank_text = font.render(f"Rank: {rank}", True, WHITE)
+    screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, HEIGHT // 2 - 20))
+    screen.blit(rank_text, (WIDTH // 2 - rank_text.get_width() // 2, HEIGHT // 2 + 20))
+
+    pygame.display.flip()  # 画面を更新
+
+    # リザルト画面を表示して、キーが押されるまで待機
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                waiting = False
+            if event.type == pygame.KEYDOWN:
+                waiting = False
 
 # メインゲームループ
 running = True
@@ -107,5 +137,8 @@ while running:
     screen.blit(score_text, (10, 10))  # スコアを左上に表示
 
     pygame.display.flip()  # 画面を更新
+
+# ゲームオーバー後にリザルト画面を表示
+show_result_screen(score)
 
 pygame.quit()

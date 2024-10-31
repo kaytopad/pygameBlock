@@ -13,40 +13,69 @@ BLACK = (0, 0, 0)
 BLUE = (0, 0, 255)
 RED = (255, 0, 0)
 
-# パドルの設定
+# ゲームの設定
 paddle_width = 100
 paddle_height = 15
-paddle_x = (WIDTH - paddle_width) // 2
-paddle_y = HEIGHT - paddle_height - 30  # パドルを少し上げる
-paddle_speed = 10  # パドルの移動速度
-
-# ボールの設定
 ball_radius = 10
-ball_x = WIDTH // 2
-ball_y = HEIGHT // 2
-ball_speed_x = 5 * random.choice((1, -1))
-ball_speed_y = -5
+block_width = 70
+block_height = 25
+block_rows = 5
+block_cols = 6
+block_gap = 7
+block_y_offset = 100
 
-# ブロックの設定
-block_width = 70  # ブロックの幅
-block_height = 25  # ブロックの高さ
-block_rows = 5  # 行の数（5行）
-block_cols = 6  # 列の数（6列）
-block_gap = 7  # ブロック間の隙間
-block_y_offset = 100  # スコアの上に隙間を作る
-
-# 中央揃えのブロック座標計算
-blocks = [(x * (block_width + block_gap) + (WIDTH - (block_cols * (block_width + block_gap))) // 2,
-            block_y_offset + y * (block_height + block_gap)) 
-          for y in range(block_rows) for x in range(block_cols)]
-
-# スコアの設定
-score = 0
 font = pygame.font.SysFont("Arial", 30)
+
+# 初期スピードの設定
+initial_ball_speed_x = 5
+initial_ball_speed_y = -5
+max_speed_x = initial_ball_speed_x * 1.45  # 初期スピードの1.45倍を上限とする
+max_speed_y = initial_ball_speed_y * 1.45
+
+def show_start_screen():
+    """スタート画面を表示する関数"""
+    screen.fill(BLACK)
+    title_text = font.render("Press any key to start", True, WHITE)
+    screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, HEIGHT // 2))
+    pygame.display.flip()
+    
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN:
+                waiting = False
+
+def initialize_game():
+    """ゲームの初期化を行う関数"""
+    global paddle_x, paddle_y, paddle_speed
+    global ball_x, ball_y, ball_speed_x, ball_speed_y
+    global blocks, score
+    
+    # パドルの設定
+    paddle_x = (WIDTH - paddle_width) // 2
+    paddle_y = HEIGHT - paddle_height - 30
+    paddle_speed = 10
+
+    # ボールの設定
+    ball_x = WIDTH // 2
+    ball_y = HEIGHT // 2
+    ball_speed_x = initial_ball_speed_x * random.choice((1, -1))
+    ball_speed_y = initial_ball_speed_y
+
+    # ブロックの設定
+    blocks = [(x * (block_width + block_gap) + (WIDTH - (block_cols * (block_width + block_gap))) // 2,
+                block_y_offset + y * (block_height + block_gap)) 
+              for y in range(block_rows) for x in range(block_cols)]
+
+    # スコアの初期化
+    score = 0
 
 def show_result_screen(score):
     """リザルト画面を表示する関数"""
-    screen.fill(BLACK)  # 背景を黒で塗りつぶし
+    screen.fill(BLACK)
     rank = ""
     if score >= 280:
         rank = "A"
@@ -57,88 +86,104 @@ def show_result_screen(score):
     else:
         rank = "D"
 
-    # 得点とランクを表示
     score_text = font.render(f"Score: {score}", True, WHITE)
     rank_text = font.render(f"Rank: {rank}", True, WHITE)
-    screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, HEIGHT // 2 - 20))
-    screen.blit(rank_text, (WIDTH // 2 - rank_text.get_width() // 2, HEIGHT // 2 + 20))
+    restart_text = font.render("Press any key to restart", True, WHITE)
+    screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, HEIGHT // 2 - 40))
+    screen.blit(rank_text, (WIDTH // 2 - rank_text.get_width() // 2, HEIGHT // 2))
+    screen.blit(restart_text, (WIDTH // 2 - restart_text.get_width() // 2, HEIGHT // 2 + 40))
 
-    pygame.display.flip()  # 画面を更新
+    pygame.display.flip()
 
-    # リザルト画面を表示して、キーが押されるまで待機
     waiting = True
     while waiting:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                waiting = False
+                pygame.quit()
+                exit()
             if event.type == pygame.KEYDOWN:
                 waiting = False
 
-# メインゲームループ
-running = True
-while running:
-    pygame.time.delay(30)  # フレームレートの制御
+def run_game():
+    """ゲームを実行するメインループ"""
+    global paddle_x, paddle_y, paddle_speed
+    global ball_x, ball_y, ball_speed_x, ball_speed_y
+    global blocks, score
+    
+    initialize_game()
+    running = True
+    while running:
+        pygame.time.delay(30)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+        # キー入力処理
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            paddle_x -= paddle_speed
+        if keys[pygame.K_RIGHT]:
+            paddle_x += paddle_speed
 
-    # キーボード入力によるパドルの移動
-    keys = pygame.key.get_pressed()  # 現在押されているキーを取得
-    if keys[pygame.K_LEFT]:  # 左キーが押されている場合
-        paddle_x -= paddle_speed
-    if keys[pygame.K_RIGHT]:  # 右キーが押されている場合
-        paddle_x += paddle_speed
+        # パドルの移動制限
+        if paddle_x < 0:
+            paddle_x = 0
+        elif paddle_x > WIDTH - paddle_width:
+            paddle_x = WIDTH - paddle_width
 
-    # パドルの境界を制限
-    if paddle_x < 0:
-        paddle_x = 0
-    elif paddle_x > WIDTH - paddle_width:
-        paddle_x = WIDTH - paddle_width
+        # ボールの移動
+        ball_x += ball_speed_x
+        ball_y += ball_speed_y
 
-    # ボールの移動
-    ball_x += ball_speed_x
-    ball_y += ball_speed_y
+        # 壁でのボールの反射
+        if ball_x <= 0 or ball_x >= WIDTH:
+            ball_speed_x *= -1
+        if ball_y <= 0:
+            ball_speed_y *= -1
+        if ball_y >= HEIGHT:
+            running = False  # ゲームオーバー
 
-    # ボールの反射処理
-    if ball_x <= 0 or ball_x >= WIDTH:
-        ball_speed_x *= -1  # 左右の壁で反射
-    if ball_y <= 0:
-        ball_speed_y *= -1  # 上の壁で反射
-    if ball_y >= HEIGHT:
-        running = False  # 下の壁に当たったらゲームオーバー
+        # パドルとの衝突
+        if (paddle_y <= ball_y + ball_radius <= paddle_y + paddle_height) and (paddle_x <= ball_x <= paddle_x + paddle_width):
+            ball_speed_y *= -1
+            paddle_speed *= 1.1
 
-    # ボールとパドルの衝突判定
-    if (paddle_y <= ball_y + ball_radius <= paddle_y + paddle_height) and (paddle_x <= ball_x <= paddle_x + paddle_width):
-        ball_speed_y *= -1  # パドルに当たったら反射
-        paddle_speed *= 1.1  # パドルの速度を10%増加
+        # ブロックとの衝突
+        for block in blocks[:]:
+            block_rect = pygame.Rect(block[0], block[1], block_width, block_height)
+            if block_rect.collidepoint(ball_x, ball_y):
+                # ブロックのどの辺に当たったかを確認して反射を調整
+                if abs(ball_y - block_rect.top) < ball_radius and ball_speed_y > 0:
+                    ball_speed_y *= -1  # 上側で衝突
+                elif abs(ball_y - block_rect.bottom) < ball_radius and ball_speed_y < 0:
+                    ball_speed_y *= -1  # 下側で衝突
+                elif abs(ball_x - block_rect.left) < ball_radius and ball_speed_x > 0:
+                    ball_speed_x *= -1  # 左側で衝突
+                elif abs(ball_x - block_rect.right) < ball_radius and ball_speed_x < 0:
+                    ball_speed_x *= -1  # 右側で衝突
 
-    # ボールとブロックの衝突判定
-    for block in blocks[:]:
-        block_rect = pygame.Rect(block[0], block[1], block_width, block_height)
-        if block_rect.collidepoint(ball_x, ball_y):
-            ball_speed_y *= -1  # ブロックに当たったら反射
-            blocks.remove(block)  # ブロックを削除
-            ball_speed_x *= 1.1  # 当たったらX軸の速度を10%増加
-            ball_speed_y *= 1.1  # 当たったらY軸の速度を10%増加
-            score += 10  # スコアを加算
+                blocks.remove(block)
+                
+                # スピードの上昇と上限の設定
+                #ball_speed_x = min(ball_speed_x * 1.1, max_speed_x)
+                #ball_speed_y = min(ball_speed_y * 1.1, max_speed_y)
+                
+                score += 10
 
-    # 描画処理
-    screen.fill(BLACK)  # 背景の塗りつぶし
-    pygame.draw.rect(screen, BLUE, (paddle_x, paddle_y, paddle_width, paddle_height))  # パドルの描画
-    pygame.draw.circle(screen, RED, (ball_x, ball_y), ball_radius)  # ボールの描画
+        # 描画処理
+        screen.fill(BLACK)
+        pygame.draw.rect(screen, BLUE, (paddle_x, paddle_y, paddle_width, paddle_height))
+        pygame.draw.circle(screen, RED, (ball_x, ball_y), ball_radius)
 
-    # ブロックの描画
-    for block in blocks:
-        pygame.draw.rect(screen, WHITE, (block[0], block[1], block_width, block_height))
+        for block in blocks:
+            pygame.draw.rect(screen, WHITE, (block[0], block[1], block_width, block_height))
 
-    # スコアの表示
-    score_text = font.render(f"Score: {score}", True, WHITE)
-    screen.blit(score_text, (10, 10))  # スコアを左上に表示
+        score_text = font.render(f"Score: {score}", True, WHITE)
+        screen.blit(score_text, (10, 10))
+        pygame.display.flip()
 
-    pygame.display.flip()  # 画面を更新
-
-# ゲームオーバー後にリザルト画面を表示
-show_result_screen(score)
-
-pygame.quit()
+# メインループ
+while True:
+    show_start_screen()
+    run_game()
+    show_result_screen(score)

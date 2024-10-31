@@ -98,7 +98,7 @@ def clear_lines():
             lines_to_clear.append(i)
     
     # スコアの加算
-    score += 10 *len(lines_to_clear)
+    score += 10 * len(lines_to_clear)
     
     # 行を消去
     for i in lines_to_clear:
@@ -129,10 +129,16 @@ def check_game_over():
 
 # ゲームのリスタート
 def restart_game():
-    global board, score, current_tetromino
+    global board, score, current_tetromino, fall_speed
     board = [[0] * board_width for _ in range(board_height)]
     score = 0
     current_tetromino = create_tetromino()
+    return 500  # 初期の落下速度を返す
+
+# スピードを更新する関数
+def update_speed():
+    global fall_speed
+    fall_speed = max(100, 500 - (score // 50) * 50)  # スコアに応じてスピードを増加
 
 # メインループ
 running = True
@@ -140,7 +146,7 @@ paused = False
 clock = pygame.time.Clock()
 current_tetromino = create_tetromino()
 fall_time = 0
-fall_speed = 500  # 初期の落下速度（ミリ秒）
+fall_speed = restart_game()  # ゲーム開始時に速度を初期化
 
 while running:
     screen.fill((0, 0, 0))
@@ -152,14 +158,16 @@ while running:
                 move_tetromino(current_tetromino, -1, 0)
             elif event.key == pygame.K_RIGHT:
                 move_tetromino(current_tetromino, 1, 0)
-            elif event.key == pygame.K_DOWN:
-                move_tetromino(current_tetromino, 0, 1)
             elif event.key == pygame.K_UP:
                 rotate_tetromino(current_tetromino)
             elif event.key == pygame.K_p:  # ポーズ
                 paused = not paused
             elif event.key == pygame.K_r and check_game_over():  # リスタート
-                restart_game()
+                fall_speed = restart_game()
+
+    keys = pygame.key.get_pressed()  # 現在押されているキーを取得
+    if keys[pygame.K_DOWN]:  # 下のボタンが押されている間
+        move_tetromino(current_tetromino, 0, 1)  # 常に下に移動
 
     if not paused:
         # 自動でテトリミノを下に移動
@@ -168,6 +176,7 @@ while running:
             if not move_tetromino(current_tetromino, 0, 1):
                 lock_tetromino(current_tetromino)
                 clear_lines()
+                update_speed()  # スピードを更新
                 current_tetromino = create_tetromino()
                 if check_game_over():  # ゲームオーバーの判定
                     paused = True  # ゲームオーバー時にポーズする
@@ -200,12 +209,12 @@ while running:
     screen.blit(score_text, (10, 10))
 
     # ゲームオーバー時の表示
-if check_game_over():
-    game_over_text1 = font.render('Game Over!', True, (255, 0, 0))
-    game_over_text2 = font.render('Press R to Restart', True, (255, 0, 0))
-    screen.blit(game_over_text1, (screen_width // 6, screen_height // 2))
-    screen.blit(game_over_text2, (screen_width // 6, screen_height // 2 + 40))  # 40ピクセル下に配置
-    
+    if check_game_over():
+        game_over_text1 = font.render('Game Over!', True, (255, 0, 0))
+        game_over_text2 = font.render('Press R to Restart', True, (255, 0, 0))
+        screen.blit(game_over_text1, (screen_width // 8, screen_height // 2))
+        screen.blit(game_over_text2, (screen_width // 8, screen_height // 2 + 40))  # 40ピクセル下に配置
+
     pygame.display.update()
     clock.tick(30)  # フレームレート設定
 

@@ -67,12 +67,12 @@ FPS = 30
 font = pygame.font.Font(None, 36)
 
 # サウンド設定
-#pygame.mixer.init()
-#hit_sound = pygame.mixer.Sound('hit.wav')  # 衝突音
-#goal_sound = pygame.mixer.Sound('goal.wav')  # ゴール音
-#item_sound = pygame.mixer.Sound('item.wav')  # アイテム取得音
-#bgm = pygame.mixer.music.load('bgm.mp3')  # BGM
-#pygame.mixer.music.play(-1)
+pygame.mixer.init()
+hit_sound = pygame.mixer.Sound('hit.wav')  # 衝突音
+goal_sound = pygame.mixer.Sound('goal.wav')  # ゴール音
+item_sound = pygame.mixer.Sound('item.wav')  # アイテム取得音
+bgm = pygame.mixer.music.load('bgm.mp3')  # BGM
+pygame.mixer.music.play(-1)
 
 def create_obstacle():
     """障害物を画面上部に作成し、ランダムな位置に配置する"""
